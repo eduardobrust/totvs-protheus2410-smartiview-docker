@@ -1,0 +1,144 @@
+# Lista todos os Serviços do Docker
+services:
+  # Serviço do banco de dados PostgreSQL
+  database:
+    image: eduardobrust/brust-protheus2410-smartview-linux-postgres:dbProtheus-dbSmarView-debian12  # Imagem do Docker Hub (ou repositório privado)
+    container_name: protheus-postgres         # Nome fixo do container
+    restart: always                           # Reinicia o container se ele falhar
+    environment:                              # Variáveis de ambiente passadas para o PostgreSQL
+      POSTGRES_INITDB_ARGS: "--encoding=WIN1252 --locale=C"
+      POSTGRES_USER: postgres                 # super usuario
+      POSTGRES_PASSWORD: a12345               # senha 
+#      POSTGRES_DB: dbprotheus                 # Nome do banco a ser criado
+    volumes:                                  # Persistência e inicialização de dados
+      - ./postgres-data:/var/lib/postgresql/data  # Volume persistente dos dados
+    ports:
+      - "5433:5432"                           # Porta 5432 do container mapeada para a 5433 do host - acesso externo ao container : ex pgagmin do windows
+    networks:
+      - protheusnet                           # Rede personalizada
+
+  # Serviço do License Server
+  licenseserver:
+    image: eduardobrust/brust-protheus2410-smartview-linux-postgres:licenseserver-opensuse15.6   # Imagem do License Server TOTVS
+    container_name: totvs_licenseserver
+    restart: always
+    ports:                                     # Portas padrão utilizadas pelo License Server
+      - "2236:2236"                            # Comunicação com appserver
+      - "5556:5556"                            # Porta principal do License Server
+      - "8050:8050"                            # WebApp do License Server
+    environment:                               # Variáveis específicas do License Server
+      - TCP_PORT=2236
+      - LICENSESERVER_PORT=5556
+      - WEBAPP_PORT=8050
+    ulimits:
+      nofile:
+        soft: 65535
+        hard: 65535      
+    networks:
+      - protheusnet
+
+  # Serviço do Dbaccess (faz a ponte entre o appserver e o banco)
+  dbaccess:
+    image: eduardobrust/brust-protheus2410-smartview-linux-postgres:dbaccess-oracleLinux9
+    container_name: totvs_dbaccess
+    restart: always
+    ports:
+      - "7892:7892"  # Porta padrão do Dbaccess
+      - "7893:7893"
+    environment:     # Variáveis de ambiente para configurar a conexão com o License Server e odbc
+      - DB_SERVER_NAME=database
+      - DB_SERVER_PORT=5432         #Porta interna de comunicacao entre os containers / porta usada pelo odbc 
+      - DB_ENVIRONMENTS=dbprotheus
+      - DB_USER=userprotheus
+      - DB_PASSWORD=a12345
+      - DB_PORT=7892
+      - DB_AUDIT_PORT=7893
+      - LICENSE_SERVER=totvs_licenseserver
+      - LICENSESERVER_PORT=5556
+      - CODEPAGE=WIN1252
+    ulimits:
+      nofile:
+        soft: 65535
+        hard: 65535
+    networks:
+      - protheusnet
+    depends_on:      # Garante que os containers abaixo sejam iniciados antes
+      - database
+      - licenseserver
+
+  # Serviço principal do Protheus (AppServer e serviços auxiliares)
+  protheus:
+    image: eduardobrust/brust-protheus2410-smartview-linux-postgres:protheus2410-opensuse15.6
+    container_name: protheus_services
+    restart: always
+    tty: true                            # Mantém um terminal ativo
+    stdin_open: true                     # Mantém o STDIN aberto (modo interativo)
+    ports:
+      - "1101:1101"  # TCP da instância Protheus APPSERVER
+      - "1102:1102"  # TCP da instância Protheus REST
+      - "9003:9003"  # PORTA HTTP DO REST
+      - "9090:9090"  # Portas WebApp
+      - "21021:21021"  # Portas webAgent
+    environment:     # Variáveis que informam como o AppServer deve se conectar aos outros serviços
+      - DBACCESS_DATABASE=postgres
+      - DBACCESS_SERVER=totvs_dbaccess
+      - DBACCESS_PORT=7892
+      - DBACCESS_ALIAS=dbprotheus
+      - LICENSE_SERVER=totvs_licenseserver
+      - LICENSE_PORT=5556
+      - TCP_PORT_APP=1101
+      - TCP_PORT_REST=1102
+      - HTTP_PORT_REST=9003
+      - WEBAPP_PORT=9090
+      - AGENT_PORT=21021
+      - TOTVS_CERTIFICATE= #totvs_certificate.crt   coloque o certificado para usar HTTPS ou deixe vazio para usar HTTP
+      - TOTVS_KEY= #totvs_certificate_key.pem      coloque o a chave para usar HTTPS ou deixe vazio para usar HTTP
+ #   volumes:     # Persistência e inicialização de dados
+ #     - ./totvs/protheus/apo:/totvs/protheus/apo  # Volume persistente dos dados 
+    ulimits:
+      nofile:
+        soft: 65535
+        hard: 65535
+    networks:
+      - protheusnet
+    depends_on:
+      - database
+      - licenseserver
+      - dbaccess
+
+ # Serviço principal do SmartView (AppServer e serviços auxiliares)
+  smartview:
+    image: eduardobrust/brust-protheus2410-smartview-linux-postgres:smartview-oraclelinux9
+    container_name: SmartView_services
+    restart: always
+    tty: true                            # Mantém um terminal ativo
+    stdin_open: true                     # Mantém o STDIN aberto (modo interativo)
+    ports:
+      - "7019:7019"  # Porta HTTP de Configuração do SmartView
+      - "7017:7017"  # Porta HTTPS de Acesso a Ferramenta SmartView
+    environment:     # Variáveis que informam como o AppServer deve se conectar aos outros serviços
+      - DBACCESS_DATABASE=postgres
+      - DBACCESS_SERVER=totvs_dbaccess
+      - DBACCESS_PORT=7892
+      - DBACCESS_ALIAS=dbSmartView
+      - LICENSE_SERVER=totvs_licenseserver
+      - LICENSE_PORT=5556
+      - TCP_PORT_APP=1101
+      - TCP_PORT_REST=1102
+      - HTTP_PORT_REST=9003
+    ulimits:
+      nofile:
+        soft: 65535
+        hard: 65535
+    networks:
+      - protheusnet
+    depends_on:
+      - database
+      - licenseserver
+      - dbaccess
+      - protheus
+
+# Definição da rede personalizada onde os serviços se comunicam entre si
+networks:
+  protheusnet:
+    driver: bridge  # Tipo de rede padrão (permite comunicação entre containers)
