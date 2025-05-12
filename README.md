@@ -52,22 +52,41 @@ Este repositório contém os arquivos de configuração e scripts necessários p
 Para rodar o ambiente do Protheus 12.1.2410 com SmartView e PostgreSQL, você precisará baixar várias imagens Docker. 
 Abaixo estão os comandos necessários para baixar cada serviço, seguido de uma breve explicação sobre o que cada um faz:
 
-### 1. Baixar a imagem do PostgreSQL com SmartView para Debian 12
+### 1. Baixar a imagem do PostgreSQL com Banco do Protheus e SmartView usando Distro Debian 12
+
 Essa imagem contém o ambiente configurado para o banco de dados do Protheus com o SmartView, rodando em Debian 12.
+
+📦 **Imagem:** `eduardobrust/brust-protheus2410-smartview-linux-postgres:dbProtheus-dbSmarView-debian12`
+🐧 **Distro:** Debian GNU/Linux 12
+🔒 **Separação lógica:** O Protheus e o SmartView usam aliases distintos (`dbprotheus` e `dbSmartView`) no mesmo container para simular bancos independentes.
+🌐 **Portas expostas:** 5433
 
 ```bash
 docker pull eduardobrust/brust-protheus2410-smartview-linux-postgres:dbProtheus-dbSmarView-debian12
 ```
 
 ### 2. Baixar a imagem do License Server para OpenSUSE 15.6
+
 Essa imagem contém o License Server do Protheus, configurado para rodar em OpenSUSE 15.6.
+
+📦 **Imagem:** `eduardobrust/brust-protheus2410-smartview-linux-postgres:licenseserver-opensuse15.6`
+🐧 **Distro:** OpenSUSE Leap 15.6
+🔗 **Função:** Garante a licença de uso dos produtos TOTVS no ambiente isolado.
+🌐 **Portas expostas:** 2236 / 5556 / 8050
 
 ```bash
 docker pull eduardobrust/brust-protheus2410-smartview-linux-postgres:licenseserver-opensuse15.6
 ```
 
 ### 3. Baixar a imagem do DbAccess para Oracle Linux 9
+
 Essa imagem contém o DbAccess, a camada de acesso ao banco de dados, configurado para Oracle Linux 9.
+
+📦 **Imagem:** `eduardobrust/brust-protheus2410-smartview-linux-postgres:dbaccess-oracleLinux9`
+🐧 **Distro:** Oracle Linux 9
+🔄 **Dependências:** Inicia somente após o banco e o license server
+💬 **Função:** Estabelece a conexão entre o AppServer e os bancos configurados (via ODBC e portas mapeadas).
+🌐 **Portas expostas:** 7892 / 7893
 
 ```bash
 docker pull eduardobrust/brust-protheus2410-smartview-linux-postgres:dbaccess-oracleLinux9
@@ -76,12 +95,24 @@ docker pull eduardobrust/brust-protheus2410-smartview-linux-postgres:dbaccess-or
 ### 4. Baixar a imagem do Protheus 2410 para OpenSUSE 15.6
 Essa imagem contém o ambiente Protheus 12.1.2410, configurado para rodar em OpenSUSE 15.6.
 
+📦 **Imagem:** `eduardobrust/brust-protheus2410-smartview-linux-postgres:protheus2410-opensuse15.6`
+🐧 **Distro:** OpenSUSE 15.6
+🔄 **Dependências:** Inicia somente após o banco, license server e dbaccess
+🎯 **Função:** Executa os serviços principais da Release 12.1.2410
+🌐 Portas expostas: 1101 / 1102 / 9003 / 9090 / 21021
+
 ```bash
 docker pull eduardobrust/brust-protheus2410-smartview-linux-postgres:protheus2410-opensuse15.6
 ```
 
 ### 5. Baixar a imagem do SmartView para Oracle Linux 9
 Essa imagem contém o ambiente do SmartView configurado para rodar em Oracle Linux 9, permitindo a visualização e interação com o sistema Protheus.
+
+📦 **Imagem:** `eduardobrust/brust-protheus2410-smartview-linux-postgres:smartview-oraclelinux9`
+🐧 **Distro:** Oracle Linux 9
+🔄 **Dependências:** Inicia somente após o banco, license server, dbaccess , Protheus
+🧱 **Separação completa:** Utiliza banco, dbaccess e license independentes
+🌐 **Portas expostas:** 7019 / 7017
 
 ```bash
 docker pull eduardobrust/brust-protheus2410-smartview-linux-postgres:smartview-oraclelinux9
@@ -102,8 +133,9 @@ Antes de rodar esses comandos, certifique-se de que o Docker está instalado e c
 
 - Docker Engine: 24.0+
 - Docker Compose: 2.20+
-- Sistemas baseados em Linux (Debian/Ubuntu, Oracle Linux, OpenSUSE)
-- WSL2 no Windows 10/11
+- WSL2 no Windows 11 PRO
+- Sistemas baseados em Linux (Debian, Oracle Linux, OpenSUSE)
+- Ubuntu como Host - Tive problemas no license Server de Ulimit *
 
 ---
 
