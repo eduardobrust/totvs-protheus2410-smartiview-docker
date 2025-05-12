@@ -147,7 +147,7 @@ Isso ocorre porque o volume persiste o estado. Use:
 ### 3. Subir todos os serviços com o script centralizador
 
 ```bash
-./totvs.sh
+./totvs.sh run
 ```
 
 🧩 Ou, se preferir, utilize diretamente o Docker Compose:

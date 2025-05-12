@@ -4,21 +4,28 @@ COMPOSE_FILE="docker-compose.yml"
 OVERRIDE_FILE="docker-compose.override.yml"
 SERVICE_NAME="database"
 
+# Verifica se o arquivo docker-compose.override.yml existe
+if [ -f "$OVERRIDE_FILE" ]; then
+  COMPOSE_OPTIONS="-f $COMPOSE_FILE -f $OVERRIDE_FILE"
+else
+  COMPOSE_OPTIONS="-f $COMPOSE_FILE"
+fi
+
 function build() {
   echo "🛑 Brust - Postgres 16 - Parando o serviço antigo (se existir)..."
-  docker-compose -f $COMPOSE_FILE -f $OVERRIDE_FILE stop $SERVICE_NAME 2>/dev/null || true
+  docker-compose $COMPOSE_OPTIONS stop $SERVICE_NAME 2>/dev/null || true
 
   echo "🔨 Brust - Postgres 16 - Removendo serviço antigo (se existir)..."
-  docker-compose -f $COMPOSE_FILE -f $OVERRIDE_FILE rm -f $SERVICE_NAME 2>/dev/null || true
+  docker-compose $COMPOSE_OPTIONS rm -f $SERVICE_NAME 2>/dev/null || true
 
   echo "🔨 Brust - Postgres 16 - Buildando imagem Docker..."
-  docker-compose -f $COMPOSE_FILE -f $OVERRIDE_FILE build $SERVICE_NAME
+  docker-compose $COMPOSE_OPTIONS build $SERVICE_NAME
 }
 
 function run() {
   # Verifica se o serviço já está rodando
-  if docker-compose -f $COMPOSE_FILE -f $OVERRIDE_FILE ps --services --filter "status=running" | grep -w $SERVICE_NAME > /dev/null; then
-    echo "⚠️ Brust - Postgres 16 - O serviço $SERVICE_NAME já está rodando. Parando e removendo..."
+  if docker-compose $COMPOSE_OPTIONS ps --services --filter "status=running" | grep -w $SERVICE_NAME > /dev/null; then
+    echo "⚠️ Brust - O serviço $SERVICE_NAME já está rodando. Parando e removendo..."
     stop
   fi
 
@@ -34,17 +41,18 @@ function run() {
   done
 
   if $BUILD; then
+    echo "🚀 Brust - Postgres 16 - Fazendo novo Build ..."
     build
   fi
 
   # Subindo o serviço com docker-compose
-  echo "🚀 Brust - Postgres 16 - Subindo serviço PostgreSQL..."
-  docker-compose -f $COMPOSE_FILE -f $OVERRIDE_FILE up -d $SERVICE_NAME
+  echo "🚀 Brust - Subindo o Postgres 16..."
+  docker-compose $COMPOSE_OPTIONS up -d $SERVICE_NAME
 }
 
 function stop() {
   echo "🛑 Brust - Postgres 16 - Parando e removendo serviço (se existir)..."
-  docker-compose -f $COMPOSE_FILE -f $OVERRIDE_FILE rm -f $SERVICE_NAME 2>/dev/null || true
+  docker-compose $COMPOSE_OPTIONS rm -f $SERVICE_NAME 2>/dev/null || true
 }
 
 function clean() {
@@ -54,7 +62,7 @@ function clean() {
 
 function logs() {
   echo "📋 Brust - Postgres 16 - Logs do serviço:"
-  docker-compose -f $COMPOSE_FILE -f $OVERRIDE_FILE logs -f $SERVICE_NAME
+  docker-compose $COMPOSE_OPTIONS logs -f $SERVICE_NAME
 }
 
 function help() {

@@ -5,12 +5,20 @@
 COMPOSE_FILE="docker-compose.yml"
 OVERRIDE_FILE="docker-compose.override.yml"
 
+# Verifica o arquivo docker-compose.override.yml
+if [ -f "$OVERRIDE_FILE" ]; then
+  COMPOSE_OPTIONS="-f $COMPOSE_FILE -f $OVERRIDE_FILE"
+else
+  COMPOSE_OPTIONS="-f $COMPOSE_FILE"
+fi
+
+# Função para build das imagens
 function build() {
   echo "🛑 Brust - TOTVS - Parando todos os serviços antigos (se existirem)..."
-  docker-compose -f $COMPOSE_FILE -f $OVERRIDE_FILE stop 2>/dev/null || true
+  docker-compose $COMPOSE_OPTIONS stop 2>/dev/null || true
 
   echo "🔨 Brust - TOTVS - Removendo todos os serviços antigos (se existirem)..."
-  docker-compose -f $COMPOSE_FILE -f $OVERRIDE_FILE rm -f 2>/dev/null || true
+  docker-compose $COMPOSE_OPTIONS rm -f 2>/dev/null || true
 
   echo "🔨 Brust - TOTVS - Iniciando build de todas as imagens..."
   ./postgres.sh build
@@ -20,8 +28,10 @@ function build() {
   ./smartview.sh build
 }
 
+# Função para rodar os containers
 function run() {
-  if docker-compose -f $COMPOSE_FILE -f $OVERRIDE_FILE ps --services --filter "status=running" | grep -q .; then
+
+  if docker-compose $COMPOSE_OPTIONS ps --services --filter "status=running" | grep -q .; then
     echo "⚠️ Brust - TOTVS - Alguns serviços já estão rodando. Parando e removendo todos..."
     stop
   fi
@@ -47,28 +57,32 @@ function run() {
   ./smartview.sh run "$@"
 }
 
+# Função para parar e remover os containers
 function stop() {
   echo "🛑 Brust - TOTVS - Parando e removendo todos os serviços (se existirem)..."
-  docker-compose -f $COMPOSE_FILE -f $OVERRIDE_FILE rm -f 2>/dev/null || true
+  docker-compose $COMPOSE_OPTIONS rm -f 2>/dev/null || true
 }
 
+# Função para limpar volumes não utilizados
 function clean() {
   echo "🧹 Brust - TOTVS - Limpando volumes não usados..."
   docker volume prune -f
 }
 
+# Função para exibir logs de todos os serviços
 function logs() {
   echo "📋 Brust - TOTVS - Logs de todos os serviços:"
-  docker-compose -f $COMPOSE_FILE -f $OVERRIDE_FILE logs -f
+  docker-compose $COMPOSE_OPTIONS logs -f
 }
 
+# Função de ajuda
 function help() {
   echo "Brust - TOTVS - Uso: $0 [comando]"
   echo ""
   echo "Comandos disponíveis:"
   echo "  build   → Builda as imagens de todos os serviços"
   echo "  run     → Para, limpa, builda e sobe todos os serviços na ordem"
-  echo "  run --no-build     → Para, limpa, sem buildar e sobe todos os serviços"
+  echo "  run --no-build     → Para, limpa, sem buildar e sobe todos os serviços na ordem"
   echo "  stop    → Para e remove todos os serviços"
   echo "  clean   → Remove volumes não usados"
   echo "  logs    → Mostra logs de todos os serviços"

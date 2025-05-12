@@ -4,20 +4,27 @@ COMPOSE_FILE="docker-compose.yml"
 OVERRIDE_FILE="docker-compose.override.yml"
 SERVICE_NAME="protheus"
 
+# Verifica se o arquivo docker-compose.override.yml existe
+if [ -f "$OVERRIDE_FILE" ]; then
+  COMPOSE_OPTIONS="-f $COMPOSE_FILE -f $OVERRIDE_FILE"
+else
+  COMPOSE_OPTIONS="-f $COMPOSE_FILE"
+fi
+
 function build() {
   echo "🛑 Brust - Protheus Services - Parando o serviço antigo (se existir)..."
-  docker-compose -f $COMPOSE_FILE -f $OVERRIDE_FILE stop $SERVICE_NAME 2>/dev/null || true
+  docker-compose $COMPOSE_OPTIONS stop $SERVICE_NAME 2>/dev/null || true
 
   echo "🔨 Brust - Protheus Services - Removendo serviço antigo (se existir)..."
-  docker-compose -f $COMPOSE_FILE -f $OVERRIDE_FILE rm -f $SERVICE_NAME 2>/dev/null || true
+  docker-compose $COMPOSE_OPTIONS rm -f $SERVICE_NAME 2>/dev/null || true
 
   echo "🔨 Brust - Protheus Services - Buildando imagem Docker..."
-  docker-compose -f $COMPOSE_FILE -f $OVERRIDE_FILE build $SERVICE_NAME
+  docker-compose $COMPOSE_OPTIONS build $SERVICE_NAME
 }
 
 function run() {
   # Verifica se o serviço já está rodando
-  if docker-compose -f $COMPOSE_FILE -f $OVERRIDE_FILE ps --services --filter "status=running" | grep -w $SERVICE_NAME > /dev/null; then
+  if docker-compose $COMPOSE_OPTIONS ps --services --filter "status=running" | grep -w $SERVICE_NAME > /dev/null; then
     echo "⚠️ Brust - O serviço $SERVICE_NAME já está rodando. Parando e removendo..."
     stop
   fi
@@ -34,18 +41,18 @@ function run() {
   done
 
   if $BUILD; then
-  echo "🚀 Brust - Protheus Services - Fazendo novo Build ..."
+    echo "🚀 Brust - Protheus Services - Fazendo novo Build ..."
     build
   fi
 
   # Subindo o serviço com docker-compose
   echo "🚀 Brust - Subindo o Protheus Services..."
-  docker-compose -f $COMPOSE_FILE -f $OVERRIDE_FILE up -d $SERVICE_NAME
+  docker-compose $COMPOSE_OPTIONS up -d $SERVICE_NAME
 }
 
 function stop() {
   echo "🛑 Brust - Protheus Services - Parando e removendo serviço (se existir)..."
-  docker-compose -f $COMPOSE_FILE -f $OVERRIDE_FILE rm -f $SERVICE_NAME 2>/dev/null || true
+  docker-compose $COMPOSE_OPTIONS rm -f $SERVICE_NAME 2>/dev/null || true
 }
 
 function clean() {
@@ -55,11 +62,11 @@ function clean() {
 
 function logs() {
   echo "📋 Brust - Protheus Services - Logs do serviço:"
-  docker-compose -f $COMPOSE_FILE -f $OVERRIDE_FILE logs -f $SERVICE_NAME
+  docker-compose $COMPOSE_OPTIONS logs -f $SERVICE_NAME
 }
 
 function help() {
-  echo "Brust - Protheus Services -  Uso: $0 [comando]"
+  echo "Brust - Protheus Services - Uso: $0 [comando]"
   echo ""
   echo "Comandos disponíveis:"
   echo "  build   → Builda a imagem do serviço"
