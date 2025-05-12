@@ -1,8 +1,9 @@
 --
 
-# 🐳 Brust Protheus 2410 Docker com PostgreSQL Setup
+# 🐳 Ambiente Dockerizado TOTVS Protheus 12.1.2410 com SmartView e PostgreSQL
 
-Este projeto contém uma imagem personalizada do **PostgreSQL 16** com script de inicialização para o banco `dbprotheus`, voltado ao uso com o ERP **Protheus**.
+Este projeto oferece um ambiente completo e containerizado do ERP **TOTVS Protheus 12.1.2410** com **SmartView** e **PostgreSQL 16**, utilizando imagens Docker personalizadas e otimizadas para distribuições Linux.
+
 
 ## 📁 Estrutura recomendada do repositório
 
@@ -34,6 +35,17 @@ Este repositório contém os arquivos de configuração e scripts necessários p
 ---
 
 ## 📦 Imagens Docker
+
+### 📥 Imagens Docker disponíveis
+
+| Serviço        | Descrição                                         | Imagem Docker                                                              |
+|----------------|---------------------------------------------------|----------------------------------------------------------------------------|
+| PostgreSQL     | Banco com init dbProtheus + SmartView (Debian 12) | `eduardobrust/...:dbProtheus-dbSmarView-debian12`                          |
+| License Server | TOTVS License Server (OpenSUSE 15.6)              | `eduardobrust/...:licenseserver-opensuse15.6`                              |
+| DbAccess       | Acesso ao banco de dados (Oracle Linux 9)         | `eduardobrust/...:dbaccess-oracleLinux9`                                   |
+| Protheus       | ERP Protheus 12.1.2410 (OpenSUSE 15.6)            | `eduardobrust/...:protheus2410-opensuse15.6`                               |
+| SmartView      | Interface de visualização (Oracle Linux 9)        | `eduardobrust/...:smartview-oraclelinux9`                                  |
+
 
 ## Como baixar as imagens Docker
 
@@ -86,6 +98,15 @@ Antes de rodar esses comandos, certifique-se de que o Docker está instalado e c
 
 ---
 
+### 🧪 Compatibilidade testada
+
+- Docker Engine: 24.0+
+- Docker Compose: 2.20+
+- Sistemas baseados em Linux (Debian/Ubuntu, Oracle Linux, OpenSUSE)
+- WSL2 no Windows 10/11
+
+---
+
 ## 🛠️ Como usar
 
 ### 1. Clone o repositório
@@ -106,6 +127,14 @@ cd brust-protheus2410-smartview-docker-linux-postgres
 ./postgres.sh logs    # 📜 Mostra logs do PostgreSQL
 ```
 
+## ❗ Problemas comuns
+
+### 🔄 "init.sql" não executa novamente
+Isso ocorre porque o volume persiste o estado. Use:
+
+```bash
+./postgres.sh stop && ./postgres.sh clean && ./postgres.sh run
+```
 📌 O script `init.sql` dentro da imagem `img_postgres` será executado **apenas na primeira vez** que o container for criado com volume limpo.
 
 🔄 Se quiser forçar nova execução:
@@ -113,7 +142,6 @@ cd brust-protheus2410-smartview-docker-linux-postgres
 ```bash
 ./postgres.sh stop && ./postgres.sh clean && ./postgres.sh run
 ```
-
 ---
 
 ### 3. Subir todos os serviços com o script centralizador
