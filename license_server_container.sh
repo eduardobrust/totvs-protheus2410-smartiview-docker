@@ -9,13 +9,13 @@
 #   CONFIGURACAO DO SERVICO     #
 #########################################
 # Nome do container (ajuste conforme necessário ou passe como argumento)
-CONTAINER_NAME=${CONTAINER_NAME:-"totvs_dbaccess"}
+CONTAINER_NAME=${CONTAINER_NAME:-"totvs_licenseserver"}
 
 # Inserir o nome do executavel
-prog="dbaccess64"
+prog="appsrvlinux"
 
 # Inserir o caminho do diretorio do executavel dentro do container
-pathbin="/totvs/dbaccess/multi"
+pathbin="/totvs/licenseserver/bin/appserver"
 
 alias=$(basename "${pathbin}")
 
@@ -23,8 +23,8 @@ progbin="${pathbin}/${prog}"
 pidfile="/var/run/${alias}.pid"
 lockfile="/var/lock/subsys/${alias}"
 
-config_filename=dbaccess.ini
-log_filename=dbconsole.log
+config_filename=appserver.ini
+log_filename=console.log
 #################################################################
 # Configuracao de ULIMIT
 #################################################################
@@ -89,7 +89,7 @@ get_pid() {
 start_service() {
     pid=$(get_pid)
     if [ -z "$pid" ]; then
-        echo "Starting Dbaccess $prog... "
+        echo "Starting License Server $prog... "
         # Inicia o serviço no container
         docker exec ${CONTAINER_NAME} /bin/bash -c "cd ${pathbin} && ${progbin} -daemon >/dev/null &"
         RETVAL=$?
@@ -102,67 +102,55 @@ start_service() {
             if [ -n "$pid" ]; then
                 echo "$pid" | docker exec ${CONTAINER_NAME} tee ${pidfile} >/dev/null 2>/dev/null
                 echo "PID : $pid"
-                echo -e "${prog} Dbaccess running :   ${green}[ OK ]${reset}"
+                echo -e "${prog} License Server running :   ${green}[ OK ]${reset}"
             else
-                echo -e "Failed to get PID for Dbaccess ${prog} : ${red}[ Failure ]${reset}"
+                echo -e "Failed to get PID for License Server ${prog} : ${red}[ Failure ]${reset}"
             fi
         else
-            echo -e "Failed to start Dbaccess ${prog} :         ${red}[ Failure ]${reset}"
+            echo -e "Failed to start License Server ${prog} :         ${red}[ Failure ]${reset}"
         fi
         echo
     else
-        echo -e "$prog Dbaccess is ${green}Started${reset} pid $pid"
+        echo -e "$prog License Server is ${green}Started${reset} pid $pid"
     fi
 }
 
 ## Stop_service: função que encerra o serviço.
-
 stop_service() {
     pid=$(get_pid)
     if [ -z "$pid" ]; then
-        echo -e "${prog} Dbaccess is not running ${red}[ Stopped ]${reset}"
+        echo -e "${prog} License Server is not running ${red}[ Stopped ]${reset}"
         return 0
     fi
-
-    # Verifica se o PID corresponde ao processo antes de enviar o sinal
+    # Verifica se o PID corresponde a appsrvlinux antes de enviar o sinal
     process_name=$(docker exec ${CONTAINER_NAME} ps -p $pid -o comm= 2>/dev/null || echo "unknown")
     if [ -z "$process_name" ] || [ "$process_name" != "$prog" ]; then
         echo -e "${red}Warning: PID $pid does not match $prog (found $process_name)${reset}"
         return 1
     fi
-
     # Envia o sinal SIGTERM
-    echo -n "Stopping Dbaccess $prog... Pid : $pid"
     if ! docker exec ${CONTAINER_NAME} kill -s SIGTERM $pid 2>/dev/null; then
         echo -e "${red}Warning: Failed to send SIGTERM to $pid${reset}"
         return 1
     fi
-
-    # Aguardar o processo terminar
-    timeout=10  # tempo máximo de espera (em segundos)
-    counter=0
-    while [ ! -z "$(docker exec ${CONTAINER_NAME} ps -p $pid -o pid= 2>/dev/null)" ]; do
-        if [ $counter -ge $timeout ]; then
-            echo -e "${red}Timeout reached, killing the process${reset}"
-            docker exec ${CONTAINER_NAME} kill -s SIGKILL $pid 2>/dev/null
-            break
-        fi
-        sleep 1
-        ((counter++))
-    done
-
-    # Remover arquivos de lock e PID
+    echo
     docker exec ${CONTAINER_NAME} rm -f ${lockfile} 2>/dev/null
     docker exec ${CONTAINER_NAME} rm -f ${pidfile} 2>/dev/null
-
-    echo -e "$prog Dbaccess is Stopped     ${red}[ Stopped ]${reset}"
+    echo -n "Stopping License Server $prog..."
+    # Aguarda o término do processo
+    while [ ! -z "$(docker exec ${CONTAINER_NAME} ps -p $pid -o pid= 2>/dev/null)" ]; do
+        echo -n "."
+        sleep 1
+    done
+    echo
+    echo -e "$prog License Server is Stopped     ${red}[ Stopped ]${reset}"
 }
 
 ## Kill_service: função que interrompe o serviço.
 kill_service() {
     pid=$(get_pid)
     if [ -z "$pid" ]; then
-        echo -e "${prog} Dbaccess is not running ${red}[ Stopped ]${reset}"
+        echo -e "${prog} License Server is not running ${red}[ Stopped ]${reset}"
         return 0
     fi
     # Verifica se o PID corresponde a appsrvlinux antes de enviar o sinal
@@ -179,14 +167,14 @@ kill_service() {
     echo
     docker exec ${CONTAINER_NAME} rm -f ${lockfile} 2>/dev/null
     docker exec ${CONTAINER_NAME} rm -f ${pidfile} 2>/dev/null
-    echo -n "Stopping Dbaccess $prog..."
+    echo -n "Stopping License Server $prog..."
     # Aguarda o término do processo
     while [ ! -z "$(docker exec ${CONTAINER_NAME} ps -p $pid -o pid= 2>/dev/null)" ]; do
         echo -n "."
         sleep 1
     done
     echo
-    echo -e "$prog Dbaccess is Killed     ${red}[ Killed ]${reset}"
+    echo -e "$prog License Server is Killed     ${red}[ Killed ]${reset}"
 }
 
 ## get_stats: função que coleta os dados do serviço e exporta no contexto atual.
@@ -219,7 +207,7 @@ get_stats() {
         fi
     else
         echo -e "Status process: ${red} [ Stopped ] ${reset} "
-        echo -e "${red}- Program $prog Dbaccess is not running! ${reset}"
+        echo -e "${red}- Program $prog License Server is not running! ${reset}"
     fi
 }
 
@@ -228,7 +216,7 @@ status() {
     get_stats
     if [ -z "$pid" ]; then
         echo -e "Status process: ${red} [ Stopped ] ${reset} "
-        echo -e "${red}- Program $prog Dbaccess is not running! ${reset}"
+        echo -e "${red}- Program $prog License Server is not running! ${reset}"
     else
         output=$(cat << EOF
 ALIAS PROCESS PORT PID CPU_TIME %CPU %MEM MEMORY THREADS STATUS PATH
@@ -285,14 +273,14 @@ EOF
         echo ""
         docker exec ${CONTAINER_NAME} cat ${pathbin}/${config_filename} 2>/dev/null || echo "Cannot read ${config_filename}"
     else
-        echo "O Dbaccess não foi localizado."
+        echo "O appserver não foi localizado."
     fi
     echo ""
     echo "### LOGFILE ###"
     consolelog=$(get_log)
     if [ -n "$consolelog" ]; then
         echo ""
-        echo -e "dbconsole.log : ${green} ${consolelog} ${reset}"
+        echo -e "console.log : ${green} ${consolelog} ${reset}"
         echo ""
         docker exec ${CONTAINER_NAME} head -n 15 "$consolelog" 2>/dev/null || echo "Cannot read log"
         echo ...
@@ -307,7 +295,7 @@ tail_log() {
     consolelog=$(get_log)
     if [ -n "$consolelog" ]; then
         echo ""
-        echo -e "dbconsole.log : ${green}$consolelog${reset}"
+        echo -e "console.log : ${green}$consolelog${reset}"
         echo ""
         docker exec ${CONTAINER_NAME} head -n 15 "$consolelog" 2>/dev/null || echo "Cannot read log"
         echo ...
@@ -328,29 +316,29 @@ export_service() {
     # Exportar log
     consolelog=$(get_log)
     if [ -n "$consolelog" ]; then
-        docker cp ${CONTAINER_NAME}:${consolelog} /tmp/${SCRIPT_NAME}_dbconsole.log 2>/dev/null || echo "Failed to export log" > /tmp/${SCRIPT_NAME}_dbconsole.log
+        docker cp ${CONTAINER_NAME}:${consolelog} /tmp/${SCRIPT_NAME}_console.log 2>/dev/null || echo "Failed to export log" > /tmp/${SCRIPT_NAME}_console.log
     else
-        echo "Chave 'consolefile' não encontrada no arquivo ${pathbin}/${config_filename}." > /tmp/${SCRIPT_NAME}_dbconsole.log
+        echo "Chave 'consolefile' não encontrada no arquivo ${pathbin}/${config_filename}." > /tmp/${SCRIPT_NAME}_console.log
     fi
 
     # Exportar config
     if [ -n "$(docker exec ${CONTAINER_NAME} test -f ${pathbin}/${config_filename} && echo true 2>/dev/null)" ]; then
         docker cp ${CONTAINER_NAME}:${pathbin}/${config_filename} /tmp/${SCRIPT_NAME}_${config_filename} 2>/dev/null || echo "Failed to export config" > /tmp/${SCRIPT_NAME}_${config_filename}
     else
-        echo "O Dbaccess não foi localizado." > /tmp/${SCRIPT_NAME}_${config_filename}
+        echo "O appserver não foi localizado." > /tmp/${SCRIPT_NAME}_${config_filename}
     fi
 
     # Compactar
     zip_file="/tmp/${SCRIPT_NAME}_export.zip"
     cd /tmp
-    zip -r "$zip_file" "${SCRIPT_NAME}_describe.txt" "${SCRIPT_NAME}_dbconsole.log" "${SCRIPT_NAME}_${config_filename}" "${SCRIPT_NAME}_library.txt" 2>/dev/null
+    zip -r "$zip_file" "${SCRIPT_NAME}_describe.txt" "${SCRIPT_NAME}_console.log" "${SCRIPT_NAME}_${config_filename}" "${SCRIPT_NAME}_library.txt" 2>/dev/null
 
     if [ -f "$zip_file" ]; then
         echo -e "Pacote criado com sucesso: ${green} $zip_file ${reset}"
     else
         echo -e "${red} Erro ao criar o pacote .zip ${reset}"
     fi
-    rm -f /tmp/${SCRIPT_NAME}_describe.txt /tmp/${SCRIPT_NAME}_dbconsole.log /tmp/${SCRIPT_NAME}_${config_filename} /tmp/${SCRIPT_NAME}_library.txt
+    rm -f /tmp/${SCRIPT_NAME}_describe.txt /tmp/${SCRIPT_NAME}_console.log /tmp/${SCRIPT_NAME}_${config_filename} /tmp/${SCRIPT_NAME}_library.txt
 }
 
 ## Show_help: Mensagem de ajuda para usar este script.
@@ -367,7 +355,7 @@ Use as opções start|stop|kill|restart|status|describe|export|log para realizar
   restart   : Reinicia o serviço.
   status    : Exibe os detalhes do serviço em formato de tabela.
   describe  : Exibe os detalhes do serviço e configurações.
-  export    : Exporta as informações do describe junto com o dbaccess.ini e dbconsole.log para
+  export    : Exporta as informações do describe junto com o appserver.ini e console.log para
               o arquivo ${SCRIPT_NAME}.zip em /tmp.
   log       : Exibe o log com o comando tail -f.
 
