@@ -1,5 +1,3 @@
---
-
 # 🐳 Ambiente Dockerizado TOTVS Protheus 12.1.2410 com SmartView e PostgreSQL
 
 Este projeto oferece um ambiente completo e containerizado do ERP **TOTVS Protheus 12.1.2410** com **SmartView** e **PostgreSQL 16**, utilizando imagens Docker personalizadas e otimizadas para distribuições Linux.
@@ -9,21 +7,30 @@ Este projeto oferece um ambiente completo e containerizado do ERP **TOTVS Prothe
 
 ```bash
 brust-protheus2410-smartview-docker-linux-postgres/
-├── docker-compose.yml
-├── totvs.sh
-├── protheus.sh
-├── smartview.sh
-├── dbaccess.sh
-├── license.sh
-├── postgres.sh
-├── img_protheus/
-├── img_smartview/
+.
+├── .git/
+├── certificate/
 ├── img_dbaccess/
 ├── img_license/
 ├── img_postgres/
-├── certificate/
+├── img_protheus/
+├── img_smartview/
 ├── postgres-data/
-└── README.md
+├── .gitignore
+├── 1_postgres_image.sh
+├── 2_license_server_image.sh
+├── 3_dbaccess_image.sh
+├── 4_protheus_image.sh
+├── 5_smartview_image.sh
+├── apprest_container.sh
+├── appserver_container.sh
+├── dbaccess_container.sh
+├── docker-compose.override_modelo.yml
+├── docker-compose.yml
+├── LICENSE
+├── README.md
+└── totvs_all_image.sh
+
 ```
 
 ---
@@ -148,15 +155,26 @@ git clone https://github.com/eduardobrust/brust-protheus2410-smartview-docker-li
 cd brust-protheus2410-smartview-docker-linux-postgres
 ```
 
----
-
-### 2. Comandos rápidos
+### 2. Descrição dos Scripts para geração das Imagens
 
 ```bash
-./postgres.sh run     # 🔧 Builda e sobe o container do PostgreSQL
-./postgres.sh stop    # ⛔ Para e remove o container
-./postgres.sh clean   # 🧹 Remove volumes não utilizados
-./postgres.sh logs    # 📜 Mostra logs do PostgreSQL
+./1_postgres_image.sh           # 🔧 Builda e sobe a imagem do PostgreSQL
+./2_license_server_image.sh     # 🔧 Builda e sobe a imagem do Totvs License Server
+./3_dbaccess_image.sh           # 🔧 Builda e sobe a imagem do Totvs Dbaccess
+./4_protheus_image.sh           # 🔧 Builda e sobe a imagem do Protheus 2410
+./5_smartview_image.sh          # 🔧 Builda e sobe a imagem do Smart View
+./totvs_all_image.sh            # 🔧 Builda e sobe todas as imagens seguindo a ordem acima 
+```
+---
+
+### 3. Comandos rápidos para geração das Imagens
+
+```bash
+./1_postgres_image.sh run     # 🔧 Builda e sobe o container do PostgreSQL
+./1_postgres_image.sh stop    # ⛔ Para e remove o container
+./1_postgres_image.sh clean   # 🧹 Remove volumes não utilizados
+./1_postgres_image.sh logs    # 📜 Mostra logs do PostgreSQL
+./1_postgres_image.sh help    # ❓ Mostra o help com os comandos dispononíveis do PostgreSQL
 ```
 
 ## ❗ Problemas comuns
@@ -165,21 +183,21 @@ cd brust-protheus2410-smartview-docker-linux-postgres
 Isso ocorre porque o volume persiste o estado. Use:
 
 ```bash
-./postgres.sh stop && ./postgres.sh clean && ./postgres.sh run
+./1_postgres_image.sh stop && ./1_postgres_image.sh clean && ./1_postgres_image.sh run
 ```
 📌 O script `init.sql` dentro da imagem `img_postgres` será executado **apenas na primeira vez** que o container for criado com volume limpo.
 
 🔄 Se quiser forçar nova execução:
 
 ```bash
-./postgres.sh stop && ./postgres.sh clean && ./postgres.sh run
+./1_postgres_image.sh stop && ./1_postgres_image.sh clean && ./1_postgres_image.sh run
 ```
 ---
 
-### 3. Subir todos os serviços com o script centralizador
+### 4. Subir todos as imagens com o script centralizador
 
 ```bash
-./totvs.sh run
+./totvs_all_image.sh run
 ```
 
 🧩 Ou, se preferir, utilize diretamente o Docker Compose:
@@ -188,7 +206,7 @@ Isso ocorre porque o volume persiste o estado. Use:
 docker-compose up -d
 ```
 
-💡 *Recomenda-se o uso do script `totvs.sh`, pois ele pode configurar volumes, certificados e outras dependências antes de iniciar os containers.*
+💡 *Recomenda-se o uso do script `totvs_all_image.sh`, pois ele pode configurar volumes, certificados e outras dependências antes de iniciar os containers.*
 
 ---
 
@@ -198,11 +216,25 @@ Caso deseje utilizar HTTPS ou integração segura entre os serviços, inclua seu
 
 ---
 
+### 📦. Comandos rápidos para manipulação dos containeres
+
+```bash
+./apprest_container.sh start        # ▶️ Inicia o serviço do Rest no Protheus
+./apprest_container.sh stop         # ⛔ Para o serviço do Rest no Protheus
+./apprest_container.sh kill         # 💀 Força a parada do serviço Rest no Protheus
+./apprest_container.sh restart      # 🔄 Reinicia o serviço do Rest no Protheus
+./apprest_container.sh status       # ℹ️ Mostra o status do serviço Rest no Protheus
+./apprest_container.sh describe     # 📝 Mostra detalhes do serviço e as configurações
+./apprest_container.sh export       # 📤 Exporta o appserver.ini, console.log para a pasta /temp do host
+./apprest_container.sh log          # 📜 Exibe o console.log do Rest na tela 
+```
+
 ## 📄 Licença
 
 📝 Todas as marcas usadas neste projeto são de propriedade da **TOTVS S.A.**
 Este projeto é mantido para fins educacionais e de testes com o ERP TOTVS Protheus.
 Licenças de software devem ser providenciadas conforme exigido pela TOTVS.
+Todo o projeto foi desenvolvido utilizando uma base teste com empresa 99 do Protheus.
 
 ---
 
@@ -212,7 +244,7 @@ Criado por **Eduardo Brust**
 
 * 📧 [eduardobrust@gmail.com](mailto:eduardobrust@gmail.com)
 * 🎥 [YouTube](https://www.youtube.com/@EduardoBrust)
-* 🔗 [LinkedIn](https://linkedin.com/in/eduardobrust)
+* 🔗 [LinkedIn](https://www.linkedin.com/in/eduardo-brust/)
 
 ---
 
