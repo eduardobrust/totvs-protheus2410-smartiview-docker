@@ -21,11 +21,11 @@ function build() {
   docker-compose $COMPOSE_OPTIONS rm -f 2>/dev/null || true
 
   echo "🔨 Brust - TOTVS - Iniciando build de todas as imagens..."
-  ./postgres.sh build
-  ./license.sh build
-  ./dbaccess.sh build
-  ./protheus.sh build
-  ./smartview.sh build
+  ./1_postgres_image.sh build
+  ./2_license_server_image.sh build
+  ./3_dbaccess_image.sh build
+  ./4_protheus_image.sh build
+  ./5_smartview_image.sh build
 }
 
 # Função para rodar os containers
@@ -50,11 +50,11 @@ function run() {
   fi
 
   echo "🚀 Brust - TOTVS - Subindo todos os serviços na ordem: postgres, license, dbaccess, protheus, smartview..."
-  ./postgres.sh run "$@"
-  ./license.sh run "$@"
-  ./dbaccess.sh run "$@"
-  ./protheus.sh run "$@"
-  ./smartview.sh run "$@"
+  ./1_postgres_image.sh run "$@"
+  ./2_license_server_image.sh run "$@"
+  ./3_dbaccess_image.sh run "$@"
+  ./4_protheus_image.sh run "$@"
+  ./5_smartview_image.sh run "$@"
 }
 
 # Função para parar e remover os containers
