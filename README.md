@@ -256,7 +256,7 @@ Caso deseje utilizar HTTPS ou integração segura entre os serviços, inclua seu
 ---
 ### 🎥. Vídeo de demonstração do Processo
 
-<iframe width="560" height="315" src="https://www.youtube.com/watch?v=rpGZOgBM7-A" frameborder="0" allowfullscreen></iframe>
+[![Protheus 2410 + Smart View no Docker](./docker.png)](https://www.youtube.com/watch?v=rpGZOgBM7-A)
 
 ---
 
