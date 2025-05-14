@@ -253,6 +253,12 @@ Caso deseje utilizar HTTPS ou integração segura entre os serviços, inclua seu
 ./apprest_container.sh export       # 📤 Exporta o appserver.ini, console.log para a pasta /temp do host
 ./apprest_container.sh log          # 📜 Exibe o console.log do Rest na tela 
 ```
+---
+### 🎥. Vídeo de demonstração do Processo
+
+<iframe width="560" height="315" src="https://www.youtube.com/watch?v=rpGZOgBM7-A" frameborder="0" allowfullscreen></iframe>
+
+---
 
 ## 📄 Licença
 
