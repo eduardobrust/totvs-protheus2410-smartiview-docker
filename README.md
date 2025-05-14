@@ -1,4 +1,4 @@
-# 🐳 Ambiente Dockerizado TOTVS Protheus 12.1.2410 com SmartView e PostgreSQL
+# 🐳 Ambiente Dockerizado em Linux - TOTVS Protheus 12.1.2410 com SmartView e PostgreSQL
 
 Este projeto oferece um ambiente completo e containerizado do ERP **TOTVS Protheus 12.1.2410** com **SmartView** e **PostgreSQL 16**, utilizando imagens Docker personalizadas e otimizadas para distribuições Linux.
 
@@ -16,6 +16,7 @@ brust-protheus2410-smartview-docker-linux-postgres/
 ├── img_protheus/
 ├── img_smartview/
 ├── postgres-data/
+├── totvs/
 ├── .gitignore
 ├── 1_postgres_image.sh
 ├── 2_license_server_image.sh
@@ -125,7 +126,7 @@ Essa imagem contém o ambiente do SmartView configurado para rodar em Oracle Lin
 docker pull eduardobrust/brust-protheus2410-smartview-linux-postgres:smartview-oraclelinux9
 ```
 
-### Observação
+### 📌 Observação
 Antes de rodar esses comandos, certifique-se de que o Docker está instalado e configurado corretamente em sua máquina. Cada um desses serviços é necessário para montar o ambiente completo do Protheus com SmartView e PostgreSQL.
 ---
 
@@ -179,6 +180,27 @@ cd brust-protheus2410-smartview-docker-linux-postgres
 
 ## ❗ Problemas comuns
 
+📌 **Persistência do RPO na Pasta `totvs/protheus/apo`**
+
+A pasta `totvs/protheus/apo` é utilizada para persistir o RPO (Repositório de Objetos) do contêiner no sistema de arquivos do host, por meio de um bind mount configurado no `docker-compose.yml`. Para manter o RPO entre diferentes execuções do contêiner, é necessário garantir que o RPO do Protheus esteja presente nesta pasta antes de iniciar o contêiner.
+
+No entanto, cuidado: se a pasta `./totvs/protheus/apo` no host estiver vazia ao iniciar o contêiner, ela sobrescreverá o conteúdo da pasta `/totvs/protheus/apo` dentro do contêiner, podendo apagar o RPO padrão da imagem. Para evitar isso, você pode comentar a linha correspondente no `docker-compose.yml`:
+
+```yaml
+# - ./totvs/protheus/apo:/totvs/protheus/apo
+```
+
+💡 **Dica de Boas Práticas**
+
+Siga este procedimento para configurar o RPO corretamente:
+
+1. **Inicie o contêiner sem o bind mount:** Comente a linha mencionada acima no `docker-compose.yml` e execute `docker-compose up -d`. Isso permite que o contêiner inicie com o RPO padrão da imagem do Protheus.
+2. **Copie o RPO para o host:** Acesse o contêiner e copie o conteúdo da pasta `/totvs/protheus/apo` para o diretório `./totvs/protheus/apo` no host (use `docker cp` para isso).
+3. **Remova o contêiner e a imagem:** Execute `docker-compose down` para parar e remover o contêiner. Se necessário, remova a imagem com `docker rmi <nome-da-imagem>`.
+4. **Reinicie com o bind mount ativado:** Descomente a linha no `docker-compose.yml` e execute `docker-compose up -d` novamente. Agora, o contêiner usará o RPO persistido na pasta do host.
+
+---
+
 ### 🔄 "init.sql" não executa novamente
 Isso ocorre porque o volume persiste o estado. Use:
 
@@ -186,6 +208,8 @@ Isso ocorre porque o volume persiste o estado. Use:
 ./1_postgres_image.sh stop && ./1_postgres_image.sh clean && ./1_postgres_image.sh run
 ```
 📌 O script `init.sql` dentro da imagem `img_postgres` será executado **apenas na primeira vez** que o container for criado com volume limpo.
+devido a natureza do script ser de criação de tabela.
+Para forçar criar a tabela novamente, apague a pasta postgres-data.
 
 🔄 Se quiser forçar nova execução:
 
@@ -193,6 +217,7 @@ Isso ocorre porque o volume persiste o estado. Use:
 ./1_postgres_image.sh stop && ./1_postgres_image.sh clean && ./1_postgres_image.sh run
 ```
 ---
+
 
 ### 4. Subir todos as imagens com o script centralizador
 
