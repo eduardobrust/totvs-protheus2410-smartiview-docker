@@ -126,14 +126,15 @@ Essa imagem contém o ambiente do SmartView configurado para rodar em Oracle Lin
 docker pull eduardobrust/brust-protheus2410-smartview-linux-postgres:smartview-oraclelinux9
 ```
 
-### 📌 Observação
-Antes de rodar esses comandos, certifique-se de que o Docker está instalado e configurado corretamente em sua máquina. Cada um desses serviços é necessário para montar o ambiente completo do Protheus com SmartView e PostgreSQL.
+#### 📌 Observação
+###### Antes de rodar esses comandos, certifique-se de que o Docker está instalado e configurado corretamente em sua máquina. Cada um desses serviços é necessário para montar o ambiente completo do Protheus com SmartView e PostgreSQL.
 ---
 
 ## ✅ Pré-requisitos
 
 * 🐳 Docker instalado
 * 💻 Bash (Linux, WSL ou Git Bash no Windows)
+* 🐧Recomendo instalar a distro OpenSUSE encontrada no microsoft store
 
 ---
 
@@ -155,6 +156,8 @@ Antes de rodar esses comandos, certifique-se de que o Docker está instalado e c
 git clone https://github.com/eduardobrust/brust-protheus2410-smartview-docker-linux-postgres.git
 cd brust-protheus2410-smartview-docker-linux-postgres
 ```
+
+###### 🌍 Baixe a pasta webagent para um diretório do windows; se estiver usando diretamente o linux, baixe o webagent do site da totvs, versão para linux. Instale e deixe rodando em memória.
 
 ### 2. Descrição dos Scripts para geração das Imagens
 
@@ -179,6 +182,8 @@ cd brust-protheus2410-smartview-docker-linux-postgres
 ```
 
 ## ❗ Problemas comuns
+
+📌 **WebAgent não sobe quando os serviços do docker estão no ar - Recomendado subir antes.**
 
 📌 **Persistência do RPO na Pasta `totvs/protheus/apo`**
 
@@ -241,7 +246,7 @@ Caso deseje utilizar HTTPS ou integração segura entre os serviços, inclua seu
 
 ---
 
-### 📦. Comandos rápidos para manipulação dos containeres
+### 📦 Comandos rápidos para manipulação dos containeres
 
 ```bash
 ./apprest_container.sh start        # ▶️ Inicia o serviço do Rest no Protheus
@@ -254,7 +259,7 @@ Caso deseje utilizar HTTPS ou integração segura entre os serviços, inclua seu
 ./apprest_container.sh log          # 📜 Exibe o console.log do Rest na tela 
 ```
 ---
-### 🎥. Vídeo de demonstração do Processo
+### 🎥 Vídeo de demonstração do Processo
 
 [![Protheus 2410 + Smart View no Docker](./docker.png)](https://www.youtube.com/watch?v=fBv1C_Ezgqg)
 
