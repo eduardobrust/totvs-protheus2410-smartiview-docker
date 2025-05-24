@@ -93,7 +93,7 @@ services:
       - AGENT_PORT=21021
       - TOTVS_CERTIFICATE= #totvs_certificate.crt   coloque o certificado para usar HTTPS ou deixe vazio para usar HTTP
       - TOTVS_KEY= #totvs_certificate_key.pem      coloque o a chave para usar HTTPS ou deixe vazio para usar HTTP
- #   volumes:     # Persistência e inicialização de dados
+    volumes:     # Persistência e inicialização de dados
       - ./totvs/protheus/apo:/totvs/protheus/apo  # Volume persistente dos dados 
     ulimits:
       nofile:

@@ -3,12 +3,12 @@ set -euo pipefail
 
 echo "🔨 Brust - Ajustando ulimit..."
 
-echo "[INFO] nofile após ulimit: $(ulimit -n)"
+echo "🔨 Brust - [INFO] nofile após ulimit: $(ulimit -n)"
 
 INI_FILE="/totvs/licenseserver/bin/appserver/appserver.ini"
 
 if [[ ! -f "$INI_FILE" ]]; then
-  echo "[ERRO] Arquivo appserver.ini não encontrado em: $INI_FILE"
+  echo "🔨 Brust -[ERRO] Arquivo appserver.ini não encontrado em: $INI_FILE"
   exit 1
 fi
 
